@@ -1,0 +1,7 @@
+{
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
+"python.terminal.activateEnvironment": false,
+"jupyter.kernels.excludePythonEnvironments": [
+  "/root/.venv"
+]
+}

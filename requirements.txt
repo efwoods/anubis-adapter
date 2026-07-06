@@ -1,0 +1,10 @@
+datasets
+boto3
+huggingface_hub
+vllm
+accelerate
+peft
+trl
+bitsandbytes
+ipython
+dotenv
