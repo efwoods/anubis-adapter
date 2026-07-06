@@ -80,3 +80,30 @@ I will need current_user: dict = Depends(get_current_user), as parameters to con
 - Maverick 4 is a 402 B parameter model on par with the quality of many proprietary models as of the current date. The objective is to improve the quality of the response by using trained adapters that tune to real-world data that attends to the features that define that data. The GRPO reward functions are the SAME functions that are used to measure quality and define likeness or difference with respect to an unmodified chatgpt response or a set of direct quotes captured from local and/or online media. 
 - This implementation guarantees improvement in quality and likeness at the limiting reagents of cost, time, compute resources infrastructure, and data availability. Combined with the Anubis API, the API endpoint alleviates the pain point of training adapters for the general public while providing an endpoint to serve the general public with quality that maximizes authenticity where there is a scarcity 
 - The lack of supply: (there are no known endpoints to train adapters for and serve inference to Llama-4-Maverick-17B-128E-Instruct nor Llama-4-Scout-17B-16E-Instruct models with those trained adapters). OTHERWISE models rely on prompting alone which exposes a gap with respect to maximizing authenticy of the responses when there are proprietary models that are able to be trained to further increase the authenticity of the responses. 
+
+# Project Structure:
+<!-- Note: scaffold is a folder for boilerplate/starter/guidance code only -->
+.
+├── CLAUDE.md
+├── .cursor
+├── .env.dev
+├── .env.example
+├── FEATURE.md
+├── .gitignore
+├── install.sh
+├── _.ipynb
+├── LICENSE
+├── README.md
+├── requirements.txt
+├── scaffold
+│   ├── media_job.py
+│   ├── security
+│   │   └── auth.py
+│   └── webapp.py
+├── settings.json
+├── src
+│   └── api
+│       └── webapp.py
+└── .vscode
+    └── settings.json
+

@@ -14,9 +14,28 @@ This is the **scaffold/test/demo** stage. The intended demo path is: unadapted i
 
 ## Current state (important)
 
-There is **no package or module structure yet**. All work lives in a single exploratory Jupyter notebook, **`_.ipynb`**, containing scratch cells (model download, quantized load, S3 upload, smoke-test generation) — much of it commented out. `README.md`'s "Resource Requirements" section is a set of empty headings to be filled in with measured GPU/memory/storage/cost numbers. When adding real code, expect to introduce the actual service structure; do not assume one exists.
+There is **no service package or module structure yet** — the real API is still to be built. What exists:
 
-Note: `install.sh` only installs the Claude Code CLI — it is **not** a project setup script.
+- **`_.ipynb`** — a single exploratory Jupyter notebook with scratch cells (model download, quantized load, S3 upload, smoke-test generation), much of it commented out. This is where the model-loading / adapter / S3 mechanics were prototyped; mine it for working snippets.
+- **`FEATURE.md`** — the **build spec** for the service to write next (see below). This is the authoritative statement of intent, ahead of the code.
+- **`scaffold/`** — **reference implementations copied from the main Anubis API** to mimic, not this repo's own runtime (imports like `from src.anubis...` are the source repo's paths and won't resolve here). Use them as the pattern to follow (see below).
+- `README.md`'s "Resource Requirements" section is a set of empty headings to fill in with measured GPU/memory/storage/cost numbers; the cost tables in `FEATURE.md` are the starting inputs for those calculations.
+
+When adding real code, expect to introduce the actual service structure; do not assume one exists. Note: `install.sh` only installs the Claude Code CLI — it is **not** a project setup script.
+
+## What to build (`FEATURE.md`) and what to mimic (`scaffold/`)
+
+`FEATURE.md` specifies an **async FastAPI service** for per-`user_id`/per-`assistant_id` base-model inference and adapter training, serving **concurrent requests from different users** for both inference and training. Every endpoint authenticates via `current_user: dict = Depends(get_current_user)`. Required surface:
+
+- **Endpoints**: all `/message` endpoints (including human-in-the-loop resume logic — but *not* `select_avatar` / `message_selected_avatar`), plus `/train_adapter`, `/adapter_training_status`, `/adapter_training_progress`, `/cancel_adapter_training_job`.
+- **Functions**: `load_basemodel`, save adapter, download adapter, attach adapter, remove adapter (adapters stored/fetched under the S3 `adapters/{user_id}/{assistant_id}/{model}/` layout).
+- **Metrics to compute and report**: memory + cost (time, capital) of LoRA training; adapter size + storage cost; concurrent users served for multi-adapter inference; concurrent users served for adapter training — ultimately the **break-even point** for running inference + training. Cost inputs (S3 tiers, per-model size/volume/GPU pricing) are tabulated in both `FEATURE.md` and `README.md`.
+
+The `scaffold/` files are the concrete patterns to follow for that surface:
+
+- **`scaffold/webapp.py`** — the FastAPI + LangGraph app to model the `/message` endpoints on: SSE token streaming (`message_graph_sse`, `stream_mode=["custom","updates"]`, `assistant_token` custom events), HITL resume via `Command(resume=...)` surfaced as an `interrupt` terminal event, `lifespan` startup (Postgres pool, store, checkpointer), and a Prometheus `/metrics` middleware — the template for the cost/latency metrics this repo must report.
+- **`scaffold/media_job.py`** — the **in-process background-job registry** to model **adapter-training jobs** on. Its master/child `MediaJob` dataclass, append-only progress-event buffers with async subscribers (late joiners replay from index 0), TTL cleanup, shared `Semaphore` concurrency pool, and cooperative cancel map almost directly onto `/train_adapter` + `/adapter_training_status` + `/adapter_training_progress` + `/cancel_adapter_training_job`. Note its caveat: the registry is per-process — a multi-worker deployment needs a shared store (Redis) instead.
+- **`scaffold/security/auth.py`** — the `get_current_user` / `get_current_user_or_anonymous_user` dependency to reuse: Auth0 Management API + `API-KEY` header, hashed-key TTL cache, anonymous users keyed by hashed IP, Stripe subscription checks.
 
 ## Environment & config
 
