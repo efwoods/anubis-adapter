@@ -210,3 +210,50 @@ real Anubis-aligned reward math, Stripe metering.
 5. **Cancel**: `POST /cancel_adapter_training_job` mid-run → status `cancelled`.
 6. **Cost**: `GET /cost/estimate` returns numbers; `README.md` Resource Requirements sections
    filled from `metrics/cost.py`.
+
+
+
+https://huggingface.co/docs/trl/en/grpo_trainer given the features established here: /home/user/gh/anubis-project/anubis/src/anubis/utils/dataset/style_features.py, the prompt completion format datasets per user_id and avatar_id located in the vectorstor from this script: /home/user/gh/anubis-project/anubis/sql/adapter_dataset_store_search.sql I need async reward functions per feature and to be able to pull that data to train a
+  model on runpod.io with GRPO using the media job implementation. The model choice will begin with meta-llama/Llama-3.2-1B-Instruct for now. The endpoint accepts a user_id (Depends(get_current_user)) and the avatar_id, searches for prompt completion format data in the vectorstore, and starts the media job of training a LoRA adapter for that model /train_adapter. I am not merging the weights into the basemodel.
+
+I am not quantizing the base model using bitsandbytes for the Llama-3.2-1B-Instruct LoRA adapter: from transformers import AutoTokenizer, AutoModelForCausalLM
+
+tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.2-1B-Instruct")
+model = AutoModelForCausalLM.from_pretrained("meta-llama/Llama-3.2-1B-Instruct")
+messages = [
+    {"role": "user", "content": "Who are you?"},
+]
+inputs = tokenizer.apply_chat_template(
+	messages,
+	add_generation_prompt=True,
+	tokenize=True,
+	return_dict=True,
+	return_tensors="pt",
+	torch_dtype=torch.bfloat16,
+	quantization_config=bnb_config,
+	trust_remote_code=True
+).to(model.device)
+
+
+model.config.use_cache = False
+model.config.pretraining_tp = 1
+
+outputs = model.generate(**inputs, max_new_tokens=40)
+print(tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:]))
+
+
+# Use the following reference material as guidance for training and serving:
+https://www.datacamp.com/tutorial/llama-4-vllm
+https://www.datacamp.com/tutorial/fine-tuning-llama-4
+https://huggingface.co/docs/trl/en/grpo_trainer
+
+Instead of scout or qwen or any bnb quantizations, use the following models:
+NOW FOR SCAFFOLDING/DEMO/TEST
+meta-llama/Llama-3.2-1B-Instruct
+
+FUTURE:
+meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8 (FOR LORA TRAINING)
+unsloth/Llama-4-Scout-17B-16E-Instruct-unsloth-bnb-4bit (FOR LORA TRAINING)
+
+meta-llama/Llama-4-Scout-17B-16E-Instruct (for inference)
+meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8 (FOR INFERENCE WITH ADAPTERS)
