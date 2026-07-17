@@ -1,0 +1,10 @@
+.venv/
+.git/
+_.ipynb
+scaffold/
+data/
+__pycache__/
+**/__pycache__/
+.env
+.env.*
+python=3.12/

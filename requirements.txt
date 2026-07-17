@@ -1,3 +1,5 @@
+# Training + serving stack. Torch is installed separately against the CUDA
+# 12.4 wheel index (see Dockerfile); transformers comes in via trl/vllm.
 datasets
 boto3
 huggingface_hub
@@ -8,3 +10,18 @@ trl
 bitsandbytes
 ipython
 dotenv
+# API service
+fastapi
+uvicorn[standard]
+python-multipart
+prometheus-client
+httpx
+python-jose[cryptography]
+cachetools
+psycopg[binary,pool]
+# Stylometric reward features (vendored src/training/style/)
+nltk
+lexicalrichness
+scikit-learn
+pandas
+numpy

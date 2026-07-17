@@ -74,3 +74,4 @@ This will first demo unadapted inference, adapter training, adapter storage, ada
 
 ## Number of concurrent users served simultaneously with LoRA adapter training
 
+<!-- RUNPOD: https://console.runpod.io/deploy -->
